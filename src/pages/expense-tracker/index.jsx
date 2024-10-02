@@ -23,12 +23,11 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
-  Menu,
-  MenuItem,
-  IconButton,
 } from "@mui/material";
-import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
+
 import { useDeleteTransaction } from "../../hooks/useDeleteTransaction";
+import { useThemeToggle } from "../../ThemeContext"; // Import the theme context
+import TransactionList from './TransactionList'; // Import the TransactionList component
 
 const ExpenseTracker = () => {
   const { addTransaction } = useAddTransaction();
@@ -36,19 +35,20 @@ const ExpenseTracker = () => {
   const { name, profilePhoto } = useGetUserInfo();
   const { deleteTransaction } = useDeleteTransaction();
   const navigate = useNavigate();
+  const { toggleTheme } = useThemeToggle();
 
   const [description, setDescription] = useState("");
   const [transactionAmount, setTransactionAmount] = useState(0);
   const [transactionType, setTransactionType] = useState("expense");
   const [open, setOpen] = useState(false);
   const [menuAnchorEl, setMenuAnchorEl] = useState(null);
-  const [selectedTransactionId, setSelectedTransactionId] = useState(null); // Track selected transaction for deletion
+  const [selectedTransactionId, setSelectedTransactionId] = useState(null);
 
   const { balance, income, expenses } = transactionTotals;
 
   const onSubmit = async (e) => {
     e.preventDefault();
-    await addTransaction({
+    addTransaction({
       description,
       transactionAmount,
       transactionType,
@@ -76,9 +76,8 @@ const ExpenseTracker = () => {
     }
   };
 
-  // Update selected transaction ID and open menu
   const handleMenuOpen = (event, id) => {
-    setSelectedTransactionId(id); // Store the ID of the selected transaction
+    setSelectedTransactionId(id);
     setMenuAnchorEl(event.currentTarget);
   };
 
@@ -86,10 +85,9 @@ const ExpenseTracker = () => {
     setMenuAnchorEl(null);
   };
 
-  // Delete the selected transaction
-  const handleDeleteTransaction = async () => {
-    await deleteTransaction(selectedTransactionId); // Use selectedTransactionId to delete
-    handleMenuClose(); // Close the menu
+  const handleDeleteTransaction = () => {
+    deleteTransaction(selectedTransactionId);
+    handleMenuClose();
   };
 
   return (
@@ -108,10 +106,7 @@ const ExpenseTracker = () => {
 
         <Box textAlign="center" mb={4}>
           <Typography variant="h6">Your Balance</Typography>
-          <Typography
-            variant="h4"
-            sx={{ fontWeight: "bold", color: balance >= 0 ? "green" : "red" }}
-          >
+          <Typography variant="h4" sx={{ fontWeight: "bold", color: balance >= 0 ? "green" : "red" }}>
             {balance >= 0 ? `$${balance}` : `-$${balance * -1}`}
           </Typography>
         </Box>
@@ -154,11 +149,7 @@ const ExpenseTracker = () => {
             sx={{ mb: 2 }}
           />
           <FormControl component="fieldset">
-            <RadioGroup
-              row
-              value={transactionType}
-              onChange={(e) => setTransactionType(e.target.value)}
-            >
+            <RadioGroup row value={transactionType} onChange={(e) => setTransactionType(e.target.value)}>
               <FormControlLabel value="expense" control={<Radio />} label="Expense" />
               <FormControlLabel value="income" control={<Radio />} label="Income" />
             </RadioGroup>
@@ -172,6 +163,10 @@ const ExpenseTracker = () => {
           Sign Out
         </Button>
 
+        <Button variant="outlined" onClick={toggleTheme} sx={{ mt: 2 }}>
+          Toggle Theme
+        </Button>
+
         <Dialog open={open} onClose={handleClose}>
           <DialogTitle>Confirm Sign Out</DialogTitle>
           <DialogContent>
@@ -180,69 +175,21 @@ const ExpenseTracker = () => {
             </DialogContentText>
           </DialogContent>
           <DialogActions>
-            <Button onClick={handleClose} color="primary">
-              Cancel
-            </Button>
-            <Button
-              onClick={() => {
-                confirmSignOut();
-                handleClose();
-              }}
-              color="secondary"
-              autoFocus
-            >
+            <Button onClick={handleClose} color="primary">Cancel</Button>
+            <Button onClick={() => { confirmSignOut(); handleClose(); }} color="secondary" autoFocus>
               Sign Out
             </Button>
           </DialogActions>
         </Dialog>
 
-        <Box mt={4}>
-          <Typography variant="h5">Transactions</Typography>
-          <Box
-            sx={{
-              maxHeight: "300px",
-              overflowY: "auto",
-              mt: 2,
-            }}
-          >
-            <ul style={{ listStyleType: "none", padding: 0 }}>
-              {transaction.map((t) => (
-                <li key={t.id}>
-                  <Paper
-                    elevation={1}
-                    sx={{
-                      p: 2,
-                      mt: 2,
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                    }}
-                  >
-                    <Box>
-                      <Typography variant="h6">{t.description}</Typography>
-                      <Typography variant="body1">
-                        ${t.transactionAmount}{" "}
-                        <span style={{ fontWeight: "bold", color: t.transactionType === "income" ? "green" : "red" }}>
-                          ({t.transactionType})
-                        </span>
-                      </Typography>
-                    </Box>
-                    <IconButton onClick={(event) => handleMenuOpen(event, t.id)}>
-                      <MoreHorizIcon />
-                    </IconButton>
-                    <Menu anchorEl={menuAnchorEl} open={Boolean(menuAnchorEl)} onClose={handleMenuClose}>
-                      <MenuItem
-                        onClick={handleDeleteTransaction}
-                      >
-                        Delete
-                      </MenuItem>
-                    </Menu>
-                  </Paper>
-                </li>
-              ))}
-            </ul>
-          </Box>
-        </Box>
+        {/* Use the TransactionList component */}
+        <TransactionList
+          transactions={transaction}
+          handleMenuOpen={handleMenuOpen}
+          handleDeleteTransaction={handleDeleteTransaction}
+          menuAnchorEl={menuAnchorEl}
+          handleMenuClose={handleMenuClose}
+        />
       </Paper>
     </Container>
   );
