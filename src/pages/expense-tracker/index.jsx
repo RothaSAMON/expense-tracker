@@ -12,7 +12,6 @@ import {
   Typography,
   Avatar,
   Container,
-  Grid,
   Paper,
   Radio,
   RadioGroup,
@@ -23,11 +22,17 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
+  Tabs,
+  Tab,
+  CircularProgress,
+  Stack,
 } from "@mui/material";
-
 import { useDeleteTransaction } from "../../hooks/useDeleteTransaction";
-import { useThemeToggle } from "../../ThemeContext"; // Import the theme context
-import TransactionList from './TransactionList'; // Import the TransactionList component
+import { useThemeToggle } from "../../ThemeContext";
+import TransactionList from "./TransactionList";
+import ComingSoon from "../../components/ComingSoon";
+import PaidOutlined from "@mui/icons-material/PaidOutlined";
+import CurrencyExchange from "@mui/icons-material/CurrencyExchange";
 
 const ExpenseTracker = () => {
   const { addTransaction } = useAddTransaction();
@@ -38,21 +43,26 @@ const ExpenseTracker = () => {
   const { toggleTheme } = useThemeToggle();
 
   const [description, setDescription] = useState("");
-  const [transactionAmount, setTransactionAmount] = useState(0);
+  const [transactionAmount, setTransactionAmount] = useState(null);
   const [transactionType, setTransactionType] = useState("expense");
   const [open, setOpen] = useState(false);
   const [menuAnchorEl, setMenuAnchorEl] = useState(null);
   const [selectedTransactionId, setSelectedTransactionId] = useState(null);
 
+  const [tabValue, setTabValue] = useState(0);
+  const [loading, setLoading] = useState(false);
+
   const { balance, income, expenses } = transactionTotals;
 
   const onSubmit = async (e) => {
     e.preventDefault();
-    addTransaction({
+    setLoading(true);
+    await addTransaction({
       description,
       transactionAmount,
       transactionType,
     });
+    setLoading(false);
 
     setDescription("");
     setTransactionAmount(0);
@@ -85,20 +95,35 @@ const ExpenseTracker = () => {
     setMenuAnchorEl(null);
   };
 
-  const handleDeleteTransaction = () => {
-    deleteTransaction(selectedTransactionId);
+  const handleDeleteTransaction = async () => {
+    setLoading(true);
+    await deleteTransaction(selectedTransactionId);
+    setLoading(false);
     handleMenuClose();
   };
 
+  const handleTabChange = (event, newValue) => {
+    setTabValue(newValue);
+  };
+
   return (
-    <Container maxWidth="md" sx={{ mt: 5 }}>
+    <Container maxWidth="md" sx={{ my: 3, mx: "auto" }}>
       <Paper elevation={3} sx={{ p: 4 }}>
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+          mb={4}
+        >
           <Typography variant="h4" component="h1">
             {name}'s Expense Tracker
           </Typography>
           {profilePhoto ? (
-            <Avatar alt="User Profile" src={profilePhoto} sx={{ width: 56, height: 56 }} />
+            <Avatar
+              alt="User Profile"
+              src={profilePhoto}
+              sx={{ width: 56, height: 56 }}
+            />
           ) : (
             <Typography>No profile photo</Typography>
           )}
@@ -106,29 +131,50 @@ const ExpenseTracker = () => {
 
         <Box textAlign="center" mb={4}>
           <Typography variant="h6">Your Balance</Typography>
-          <Typography variant="h4" sx={{ fontWeight: "bold", color: balance >= 0 ? "green" : "red" }}>
+          <Typography
+            variant="h4"
+            sx={{ fontWeight: "bold", color: balance >= 0 ? "green" : "red" }}
+          >
             {balance >= 0 ? `$${balance}` : `-$${balance * -1}`}
           </Typography>
         </Box>
 
-        <Grid container spacing={2} mb={4}>
-          <Grid item xs={6}>
-            <Paper elevation={2} sx={{ p: 2, textAlign: "center" }}>
-              <Typography variant="subtitle1">Income</Typography>
-              <Typography variant="h6" sx={{ color: "green" }}>
-                ${income}
-              </Typography>
-            </Paper>
-          </Grid>
-          <Grid item xs={6}>
-            <Paper elevation={2} sx={{ p: 2, textAlign: "center" }}>
-              <Typography variant="subtitle1">Expenses</Typography>
-              <Typography variant="h6" sx={{ color: "red" }}>
-                ${expenses}
-              </Typography>
-            </Paper>
-          </Grid>
-        </Grid>
+        <Stack spacing={2} mb={4} direction={{ xs: "column", sm: "row" }}>
+          <Paper
+            elevation={2}
+            sx={{ p: 2, textAlign: "center", flex: 1, borderRadius: "8px" }}
+          >
+            <PaidOutlined
+              sx={{
+                backgroundColor: "#D1E9F6",
+                p: 2,
+                borderRadius: "8px",
+                color: "#4379F2",
+              }}
+            />
+            <Typography variant="subtitle1">Income</Typography>
+            <Typography variant="h6" sx={{ color: "green" }}>
+              ${income}
+            </Typography>
+          </Paper>
+          <Paper
+            elevation={2}
+            sx={{ p: 2, textAlign: "center", flex: 1, borderRadius: "8px" }}
+          >
+            <CurrencyExchange
+              sx={{
+                backgroundColor: "#FCC8D1",
+                p: 2,
+                borderRadius: "8px",
+                color: "#FF0000",
+              }}
+            />
+            <Typography variant="subtitle1">Expenses</Typography>
+            <Typography variant="h6" sx={{ color: "red" }}>
+              ${expenses}
+            </Typography>
+          </Paper>
+        </Stack>
 
         <Box component="form" onSubmit={onSubmit} mb={4}>
           <TextField
@@ -149,17 +195,41 @@ const ExpenseTracker = () => {
             sx={{ mb: 2 }}
           />
           <FormControl component="fieldset">
-            <RadioGroup row value={transactionType} onChange={(e) => setTransactionType(e.target.value)}>
-              <FormControlLabel value="expense" control={<Radio />} label="Expense" />
-              <FormControlLabel value="income" control={<Radio />} label="Income" />
+            <RadioGroup
+              row
+              value={transactionType}
+              onChange={(e) => setTransactionType(e.target.value)}
+            >
+              <FormControlLabel
+                value="expense"
+                control={<Radio />}
+                label="Expense"
+              />
+              <FormControlLabel
+                value="income"
+                control={<Radio />}
+                label="Income"
+              />
             </RadioGroup>
           </FormControl>
-          <Button type="submit" variant="contained" fullWidth sx={{ mt: 2 }}>
-            Add Transaction
+          <Button
+            type="submit"
+            variant="contained"
+            fullWidth
+            sx={{ mt: 2 }}
+            disabled={loading}
+          >
+            {loading ? <CircularProgress size={24} /> : "Add Transaction"}
           </Button>
         </Box>
 
-        <Button variant="outlined" color="secondary" onClick={handleClickOpen} fullWidth sx={{ mt: 2 }}>
+        <Button
+          variant="outlined"
+          color="secondary"
+          onClick={handleClickOpen}
+          fullWidth
+          sx={{ mt: 2 }}
+        >
           Sign Out
         </Button>
 
@@ -171,25 +241,51 @@ const ExpenseTracker = () => {
           <DialogTitle>Confirm Sign Out</DialogTitle>
           <DialogContent>
             <DialogContentText>
-              Are you sure you want to sign out? All unsaved changes will be lost.
+              Are you sure you want to sign out? All unsaved changes will be
+              lost.
             </DialogContentText>
           </DialogContent>
           <DialogActions>
-            <Button onClick={handleClose} color="primary">Cancel</Button>
-            <Button onClick={() => { confirmSignOut(); handleClose(); }} color="secondary" autoFocus>
+            <Button onClick={handleClose} color="primary">
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                confirmSignOut();
+                handleClose();
+              }}
+              color="secondary"
+              autoFocus
+            >
               Sign Out
             </Button>
           </DialogActions>
         </Dialog>
 
-        {/* Use the TransactionList component */}
-        <TransactionList
-          transactions={transaction}
-          handleMenuOpen={handleMenuOpen}
-          handleDeleteTransaction={handleDeleteTransaction}
-          menuAnchorEl={menuAnchorEl}
-          handleMenuClose={handleMenuClose}
-        />
+        <Tabs value={tabValue} onChange={handleTabChange} sx={{ mt: 4 }}>
+          <Tab label="Transaction" />
+          <Tab label="Monthly" />
+        </Tabs>
+
+        {tabValue === 0 && (
+          <TransactionList
+            transactions={transaction}
+            handleMenuOpen={handleMenuOpen}
+            handleDeleteTransaction={handleDeleteTransaction}
+            menuAnchorEl={menuAnchorEl}
+            handleMenuClose={handleMenuClose}
+          />
+        )}
+        {tabValue === 1 && (
+          <Box
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            height="250px"
+          >
+            <ComingSoon />
+          </Box>
+        )}
       </Paper>
     </Container>
   );

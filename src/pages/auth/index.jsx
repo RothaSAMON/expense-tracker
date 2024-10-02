@@ -2,7 +2,11 @@ import { auth, provider } from "../../config/firebase-config";
 import { signInWithPopup } from "firebase/auth";
 import { useNavigate, Navigate } from "react-router-dom";
 import { useGetUserInfo } from "../../hooks/useGetUserInfo";
-import { Box, Button, Typography, Container } from "@mui/material";
+import { Box, Button, Typography, Stack } from "@mui/material";
+import GhostGameSvg from "../../assets/images/Horror-video-game.svg";
+import ComingSoon from "../../components/ComingSoon";
+import OutletImageComponent from "../../components/OutletImage";
+import Google from "@mui/icons-material/Google";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -26,44 +30,59 @@ const Auth = () => {
   }
 
   return (
-    <Container
-      maxWidth="sm"
+    <Box
       sx={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
         height: "100vh",
+        display: "flex",
+        flexDirection: { md: "row", xs: "column" },
       }}
     >
       <Box
+        component="img"
+        src={GhostGameSvg}
+        alt="image"
+        sx={{ display: { md: "none", xs: "block" } }}
+      />
+
+      <Box
         sx={{
-          boxShadow: 3,
-          p: 4,
-          borderRadius: 2,
           textAlign: "center",
-          backgroundColor: "background.paper",
+          width: { md: "50%", xs: "100%" },
+          mx: "auto",
         }}
       >
-        <Typography variant="h5" gutterBottom>
-          Sign In with Google to Continue
-        </Typography>
+        <Stack flexDirection="column" p={{ md: 3, xs: 2 }}>
+          <Typography variant="h5" gutterBottom>
+            Sign In with Google to Access Your Account
+          </Typography>
+          <Typography variant="body2" color="gray" gutterBottom>
+            By signing in with Google, you can quickly and securely access your
+            personalized dashboard, manage your transactions.
+          </Typography>
+        </Stack>
+
         <Button
-          variant="contained"
+          startIcon={<Google />}
+          variant="outlined"
           onClick={signInWithGoogle}
           sx={{
-            mt: 2,
-            backgroundColor: "#4285F4",
-            color: "#fff",
+            mt: {md: 2, xs: 0},
+            borderColor: "#4285F4",
+            backgroundColor: "transparent",
+            color: "#4285F4",
+            boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)",
             "&:hover": {
-              backgroundColor: "#357ae8",
+              borderColor: "#357ae8",
+              boxShadow: "0px 4px 14px rgba(0, 0, 1, 0.3)",
             },
           }}
         >
           Sign In with Google
         </Button>
       </Box>
-    </Container>
+
+      <OutletImageComponent />
+    </Box>
   );
 };
 
