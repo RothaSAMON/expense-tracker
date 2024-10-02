@@ -2,7 +2,7 @@ import { auth, provider } from "../../config/firebase-config";
 import { signInWithPopup } from "firebase/auth";
 import { useNavigate, Navigate } from "react-router-dom";
 import { useGetUserInfo } from "../../hooks/useGetUserInfo";
-import { useEffect } from "react";
+import { Box, Button, Typography, Container } from "@mui/material";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -26,10 +26,44 @@ const Auth = () => {
   }
 
   return (
-    <div>
-      <p>Sign In Google to continue</p>
-      <button onClick={signInWithGoogle}>Sign In with Google</button>
-    </div>
+    <Container
+      maxWidth="sm"
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        height: "100vh",
+      }}
+    >
+      <Box
+        sx={{
+          boxShadow: 3,
+          p: 4,
+          borderRadius: 2,
+          textAlign: "center",
+          backgroundColor: "background.paper",
+        }}
+      >
+        <Typography variant="h5" gutterBottom>
+          Sign In with Google to Continue
+        </Typography>
+        <Button
+          variant="contained"
+          onClick={signInWithGoogle}
+          sx={{
+            mt: 2,
+            backgroundColor: "#4285F4",
+            color: "#fff",
+            "&:hover": {
+              backgroundColor: "#357ae8",
+            },
+          }}
+        >
+          Sign In with Google
+        </Button>
+      </Box>
+    </Container>
   );
 };
 
