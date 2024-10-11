@@ -12,18 +12,42 @@ const Auth = () => {
   const navigate = useNavigate();
   const { isAuth } = useGetUserInfo();
 
-  const signInWithGoogle = async () => {
-    const result = await signInWithPopup(auth, provider);
-    const authInfo = {
-      userID: result.user.uid,
-      name: result.user.displayName,
-      profilePhoto: result.user.photoURL,
-      isAuth: true,
-    };
-    localStorage.setItem("auth", JSON.stringify(authInfo));
+  // const signInWithGoogle = async () => {
+  //   const result = await signInWithPopup(auth, provider);
+  //   console.log('user data :',result.user);
+  //   const authInfo = {
+  //     userID: result.user.uid,
+  //     name: result.user.displayName,
+  //     profilePhoto: result.user.photoURL,
+  //     isAuth: true,
+  //   };
+  //   localStorage.setItem("auth", JSON.stringify(authInfo));
 
-    navigate("/expense-tracker");
+  //   navigate("/expense-tracker");
+  // };
+  const signInWithGoogle = async () => {
+    try {
+      const result = await signInWithPopup(auth, provider);
+      console.log('user data:', result.user);  // Check what user info you get
+  
+      const authInfo = {
+        userID: result.user.uid,
+        name: result.user.displayName,
+        profilePhoto: result.user.photoURL,
+        email: result.user.email,  // Store the email
+        loginDate: new Date().toISOString(),  // Store the current date in ISO format
+        isAuth: true,
+      };
+  
+      localStorage.setItem("auth", JSON.stringify(authInfo));
+  
+      navigate("/expense-tracker");
+    } catch (error) {
+      console.error("Error signing in with Google:", error);
+    }
   };
+  
+  
 
   if (isAuth) {
     return <Navigate to="/expense-tracker" />;

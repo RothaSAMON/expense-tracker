@@ -1,13 +1,23 @@
+import React, { useState } from "react";
 import {
   Box,
-  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
   Typography,
   IconButton,
   Menu,
   MenuItem,
+  Paper,
+  TablePagination,
+  Button,
 } from "@mui/material";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
-import { format } from "date-fns"; // Import date-fns for date formatting
+import { format } from "date-fns";
+import { Money } from "@mui/icons-material";
 
 const TransactionList = ({
   transactions,
@@ -16,61 +26,89 @@ const TransactionList = ({
   menuAnchorEl,
   handleMenuClose,
 }) => {
+  // Pagination state
+  const [page, setPage] = useState(0); // Current page
+  const [rowsPerPage, setRowsPerPage] = useState(5);
+
+  // Handle page change
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  // Handle rows per page change
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0); // Reset page to 0 when rows per page change
+  };
+
+  // Calculate the transactions to display based on pagination
+  const paginatedTransactions = transactions.slice(
+    page * rowsPerPage,
+    page * rowsPerPage + rowsPerPage
+  );
+
   return (
     <Box mt={4}>
       <Typography variant="h5">Transactions</Typography>
-      <Box
-        sx={{
-          maxHeight: "300px",
-          overflowY: "auto",
-          mt: 2,
-        }}
-      >
-        <ul style={{ listStyleType: "none", padding: 0 }}>
-          {transactions.map((tran) => (
-            <li key={tran.id} style={{ margin: "8px 0" }}>
-              <Paper
-                elevation={1}
-                sx={{
-                  p: 2,
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "start",
-                }}
-              >
-                <Box sx={{ flexGrow: 1 }}>
-                  <Typography>{tran.description}</Typography>
-                  {/* Display the formatted date and time */}
-                  <Typography variant="body2" color="textSecondary">
-                    {tran.createdAt
-                      ? format(
-                          new Date(tran.createdAt.seconds * 1000),
-                          "MMMM dd, yyyy hh:mm a"
-                        )
-                      : "Date not available"}
-                  </Typography>
 
-                  <Typography
+      <TableContainer component={Paper} sx={{ mt: 2 }}>
+        <Table stickyHeader aria-label="transaction table">
+          <TableHead>
+            <TableRow>
+              <TableCell>Description</TableCell>
+              <TableCell>Date</TableCell>
+              <TableCell align="right">Amount</TableCell>
+              <TableCell align="right">Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {paginatedTransactions.map((tran) => (
+              <TableRow key={tran.id}>
+                <TableCell component="th" scope="row">
+                  {tran.description}
+                </TableCell>
+                <TableCell>
+                  {tran.createdAt
+                    ? format(
+                        new Date(tran.createdAt.seconds * 1000),
+                        "MMMM dd, yyyy hh:mm a"
+                      )
+                    : "Date not available"}
+                </TableCell>
+                <TableCell align="right">
+                  <Button
+                  startIcon={<Money />}
                     sx={{
                       color:
-                        tran.transactionType === "expense" ? "red" : "green",
+                        tran.transactionType === "expense" ? "orange" : "green",
+                        backgroundColor:
+                        tran.transactionType === "expense" ? "#FFF2D7" : "#D1EECC",
                     }}
                   >
                     ${tran.transactionAmount}
-                  </Typography>
-                </Box>
-                <Box>
+                  </Button>
+                </TableCell>
+                <TableCell align="right">
                   <IconButton
                     onClick={(event) => handleMenuOpen(event, tran.id)}
                   >
                     <MoreHorizIcon />
                   </IconButton>
-                </Box>
-              </Paper>
-            </li>
-          ))}
-        </ul>
-      </Box>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+        <TablePagination
+          rowsPerPageOptions={[5, 10, 25]}
+          component="div"
+          count={transactions.length}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+        />
+      </TableContainer>
 
       <Menu
         anchorEl={menuAnchorEl}
